@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model with prisma
+model User {
+  user_id              String               @id @default(uuid())
+  first_name           String
+  last_name            String
+  email                String               @unique
+  account_Status       AccountStatus
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  location_id          String?
+  // Relation with location  Table
+  location             Location?            @relation(fields: [location_id], references: [location_id])
+  paymentInfo          PaymentInfo[]
+  user_preferences     UserPreferences[]
+  payment_transactions PaymentTransaction[]
+  event_bookings       EventBooking[]
+  booking_histories    BookingHistory[]
+}
+
+// Payment Info model
+
+model PaymentInfo {
+  payment_info_id      String               @id @default(uuid())
+  user_id              String
+  card_token           String
+  expiry_date          DateTime
+  billing_address      String
+  payment_type         PaymentType
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  payment_transactions PaymentTransaction[]
+
+  // Relation for user_id
+  user User @relation(fields: [user_id], references: [user_id])
+}
+
+// Location Model
+
+model Location {
+  location_id String   @id @default(uuid())
+  address     String
+  city        String
+  state       String
+  country     String
+  zip_code    String
+  timezone    String
+  latitude    Float
+  longitude   Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+  events      Event[]
+}
+
+// Preferences model
+model Preferences {
+  preferences_id   String            @id @default(uuid())
+  preference_name  String
+  description      String
+  user_preferences UserPreferences[]
+}
+
+// model for userPreference
+model UserPreferences {
+  user_preferences_id String @id @default(uuid())
+  user_id             String
+  preferences_id      String
+
+  // Raltion for User and Preference
+  user       User        @relation(fields: [user_id], references: [user_id])
+  preference Preferences @relation(fields: [preferences_id], references: [preferences_id])
+}
+
+// Event Model
+
+model Event {
+  event_id     String      @id @default(uuid())
+  organizer_id String
+  event_name   String
+  description  String
+  event_type   EventType
+  start_date   DateTime
+  end_date     DateTime
+  location_id  String
+  status       EventStatus
+  ticketlimit  Int
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Seats Inventory
+  seats          SeatsInventory[]
+  event_bookings EventBooking[]
+
+  // Relations for locationId and organizerId
+  location       Location         @relation(fields: [location_id], references: [location_id])
+  organizer      EventOrganizer   @relation(fields: [organizer_id], references: [organizer_id])
+  BookingHistory BookingHistory[]
+}
+
+// Event Booking model
+
+model EventBooking {
+  event_booking_id  String        @id @default(uuid())
+  event_id          String
+  user_id           String
+  seat_id           String
+  booking_date      DateTime
+  paymentStatus     PaymentStatus
+  amount_paid       Float
+  cancellation_date DateTime?
+  createdAt         DateTime      @default(now())
+
+  // Raltions here 
+  event Event          @relation(fields: [event_id], references: [event_id])
+  user  User           @relation(fields: [user_id], references: [user_id])
+  seat  SeatsInventory @relation(fields: [seat_id], references: [seat_id])
+
+  payment_transaction PaymentTransaction[]
+}
+
+//  Model for Seats Inventory
+model SeatsInventory {
+  seat_id     String     @id @default(uuid())
+  event_id    String
+  seat_number String
+  seat_type   SeatType
+  price       Float
+  seat_status SeatStatus
+
+  // Relation with event
+  event          Event          @relation(fields: [event_id], references: [event_id])
+  event_bookings EventBooking[]
+}
+
+// model for Booking History
+
+model BookingHistory {
+  history_id      String        @id @default(uuid())
+  user_id         String
+  event_id        String
+  booking_date    DateTime
+  ticket_type     TicketType
+  payment_status  PaymentStatus
+  ticket_quantity Int
+  amount_paid     Float
+  createdAt       DateTime      @default(now())
+
+  // Relations for Event and User
+  event Event @relation(fields: [event_id], references: [event_id])
+  user  User  @relation(fields: [user_id], references: [user_id])
+}
+
+// Event Organizer model
+model EventOrganizer {
+  organizer_id    String      @id @default(uuid())
+  organizer_name  String
+  organizer_email String      @unique
+  contact_number  String
+  gst_number      String      @unique
+  legal_status    LegalStatus
+  approval_date   DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  events          Event[]
+}
+
+// model for payment Transactions
+model PaymentTransaction {
+  transaction_id   String            @id @default(uuid())
+  user_id          String
+  event_booking_id String
+  payment_info_id  String
+  amount           Float
+  status           TransactionStatus
+  transaction_date DateTime
+
+  // Relations 
+  user          User         @relation(fields: [user_id], references: [user_id])
+  event_booking EventBooking @relation(fields: [event_booking_id], references: [event_booking_id])
+  payment_info  PaymentInfo  @relation(fields: [payment_info_id], references: [payment_info_id])
+}
+
+// All the Required Fields
+enum AccountStatus {
+  active
+  inactive
+  suspended
+}
+
+enum PaymentType {
+  credit
+  debit
+  paypal
+  cash
+  stripe
+}
+
+enum EventType {
+  Workshop
+  Conference
+  Seminar
+  Concert
+  Exhibition
+}
+
+enum EventStatus {
+  Completed
+  Upcoming
+  Cancelled
+  PendingApproval
+}
+
+enum PaymentStatus {
+  Pending
+  Failed
+  Success
+}
+
+enum SeatType {
+  VIP
+  General
+  Student
+}
+
+enum SeatStatus {
+  available
+  booked
+}
+
+enum TicketType {
+  VIP
+  General
+  Student
+  EalyBird
+}
+
+enum LegalStatus {
+  Pending
+  Approved
+  Rejected
+  Suspended
+}
+
+enum TransactionStatus {
+  Completed
+  Failed
+  Pending
+}
