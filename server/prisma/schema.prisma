@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model with prisma
+// User model Schema
 model User {
   user_id              String               @id @default(uuid())
   first_name           String
@@ -26,7 +26,7 @@ model User {
   booking_histories    BookingHistory[]
 }
 
-// Payment Info model
+// Payment Info model Schema
 
 model PaymentInfo {
   payment_info_id      String               @id @default(uuid())
@@ -43,7 +43,7 @@ model PaymentInfo {
   user User @relation(fields: [user_id], references: [user_id])
 }
 
-// Location Model
+// Location Model Schema
 
 model Location {
   location_id String   @id @default(uuid())
@@ -61,7 +61,7 @@ model Location {
   events      Event[]
 }
 
-// Preferences model
+// Preferences model Schema
 model Preferences {
   preferences_id   String            @id @default(uuid())
   preference_name  String
@@ -69,7 +69,7 @@ model Preferences {
   user_preferences UserPreferences[]
 }
 
-// model for userPreference
+// UserPreferences Model Schema
 model UserPreferences {
   user_preferences_id String @id @default(uuid())
   user_id             String
@@ -80,7 +80,7 @@ model UserPreferences {
   preference Preferences @relation(fields: [preferences_id], references: [preferences_id])
 }
 
-// Event Model
+// Event Model Schema
 
 model Event {
   event_id     String      @id @default(uuid())
@@ -96,7 +96,7 @@ model Event {
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
-  // Seats Inventory
+  // Seats Inventory 
   seats          SeatsInventory[]
   event_bookings EventBooking[]
 
@@ -106,7 +106,7 @@ model Event {
   BookingHistory BookingHistory[]
 }
 
-// Event Booking model
+// Event Booking model Schema
 
 model EventBooking {
   event_booking_id  String        @id @default(uuid())
@@ -127,7 +127,7 @@ model EventBooking {
   payment_transaction PaymentTransaction[]
 }
 
-//  Model for Seats Inventory
+//  SeatsInventory Model Schema
 model SeatsInventory {
   seat_id     String     @id @default(uuid())
   event_id    String
@@ -141,7 +141,7 @@ model SeatsInventory {
   event_bookings EventBooking[]
 }
 
-// model for Booking History
+// bookingHistory model schema
 
 model BookingHistory {
   history_id      String        @id @default(uuid())
@@ -159,7 +159,7 @@ model BookingHistory {
   user  User  @relation(fields: [user_id], references: [user_id])
 }
 
-// Event Organizer model
+// Event Organizer model Schema
 model EventOrganizer {
   organizer_id    String      @id @default(uuid())
   organizer_name  String
@@ -173,7 +173,7 @@ model EventOrganizer {
   events          Event[]
 }
 
-// model for payment Transactions
+// PaymentTransaction model schema
 model PaymentTransaction {
   transaction_id   String            @id @default(uuid())
   user_id          String
