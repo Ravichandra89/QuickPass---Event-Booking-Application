@@ -37,7 +37,7 @@ const getUserProfile = async (req, res) => {
 };
 
 // Update User Profile
-const updateUserProfil = async (req, res) => {
+const updateUserProfile = async (req, res) => {
   try {
     // Get userId from params
     const { userId } = await req.params;
@@ -196,9 +196,59 @@ const updateUserPreferences = async (req, res) => {
   }
 };
 
+const getUserNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Fetch notification for user
+    const notificationFetch = await prisma.notifications.findMany({
+      where: {
+        user_id: userId,
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
+
+    if (!notificationFetch && notificationFetch.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No notifications found for user",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User notifications fetched successfully",
+      data: notificationFetch,
+    });
+  } catch (error) {
+    console.error("Error Fetching User Notification", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching user notifications",
+      error: error.message,
+    });
+  }
+};
+
 export default {
   getUserProfile,
   updateUserProfile,
   getUserPreferences,
   updateUserPreferences,
+  getUserNotifications,
 };
