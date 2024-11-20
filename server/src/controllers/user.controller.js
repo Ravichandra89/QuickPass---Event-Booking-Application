@@ -100,9 +100,101 @@ const updateUserProfil = async (req, res) => {
 };
 
 // User Preference GET Request
-const getUserPreferences = async (req, res) => {};
+const getUserPreferences = async (req, res) => {
+  try {
+    const { userId } = await req.params;
+    const userPreferences = await prisma.userPreferences.findUnique({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        preferences: true,
+      },
+    });
 
-const updateUserPreferences = async (req, res) => {};
+    if (!userPreferences && userPreferences.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User preferences not found",
+      });
+    }
+
+    // send the preferences in response
+    res.status(200).json({
+      success: true,
+      message: "User preferences retrieved successfully",
+      data: userPreferenes,
+    });
+  } catch (error) {
+    console.error("Error while Fetching UserPreferences", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching user preferences",
+      error: error.message,
+    });
+  }
+};
+
+const updateUserPreferences = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { preferences } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Prepare the data or update
+    const updateData = preferences.map((preferenceId) => ({
+      where: {
+        user_id_preferences_id: {
+          user_id: userId,
+          preferences_id: preferenceId,
+        },
+      },
+      data: {
+        preferences_id: preferenceId,
+      },
+    }));
+
+    // Update the preferences to model
+    const updatedUserPreferences = await prisma.userPreferences.updateMany({
+      where: {
+        user_id: userId,
+      },
+      data: updateData,
+    });
+
+    if (!updateUserPreferences && updateUserPreferences.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User preferences not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "User preferences updated successfully",
+      data: updateUserPreferences,
+    });
+  } catch (error) {
+    console.error("Error while Updating UserPreferences", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating user preferences",
+      error: error.message,
+    });
+  }
+};
 
 export default {
   getUserProfile,
