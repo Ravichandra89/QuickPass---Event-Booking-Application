@@ -24,6 +24,7 @@ model User {
   payment_transactions PaymentTransaction[]
   event_bookings       EventBooking[]
   booking_histories    BookingHistory[]
+  Notification         Notification[]
 }
 
 // Payment Info model Schema
@@ -187,6 +188,23 @@ model PaymentTransaction {
   user          User         @relation(fields: [user_id], references: [user_id])
   event_booking EventBooking @relation(fields: [event_booking_id], references: [event_booking_id])
   payment_info  PaymentInfo  @relation(fields: [payment_info_id], references: [payment_info_id])
+}
+
+model Notification {
+  notification_id String             @id @default(uuid())
+  user_id         String
+  message         String
+  status          NotificationStatus
+  createdAt       DateTime           @default(now())
+
+  // forming relation
+  user User @relation(fields: [user_id], references: [user_id])
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  delivered
 }
 
 // All the Required Fields
