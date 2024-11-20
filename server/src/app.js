@@ -1,15 +1,23 @@
-import express from "express"
-import eventRoute from "../src/routes/event.route.js"
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
 
-const app = express()
+const app = express();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// configuration
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
+app.use(cookieParser());
 
-app.use('/api/v1/event',eventRoute);
+//routes import
+import eventRoute from "../src/routes/event.route.js";
 
-app.all('*', (_req, res) => {
-    res.status(404).send('hello');
+// routes declearation
+app.use("/api/v1/event", eventRoute);
+
+app.all("*", (_req, res) => {
+  res.status(404).send("hello");
 });
 
 export default app;
