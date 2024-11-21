@@ -143,10 +143,10 @@ const getUserPreferences = async (req, res) => {
 
 const updateUserPreferences = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { preferences } = req.body; // Array of preference IDs to be updated
+    const { userId, userPreferenceId } = req.params;
+    const { preference_name, description } = req.body;
 
-    // Fetch the user by userId
+    // Check if user exists
     const user = await prisma.user.findUnique({
       where: {
         user_id: userId,
@@ -160,35 +160,43 @@ const updateUserPreferences = async (req, res) => {
       });
     }
 
-    // Loop through the preferences array and update each user preference
-    const updatePromises = preferences.map((preferenceId) => {
-      return prisma.userPreferences.upsert({
-        where: {
-          user_id_preferences_id: {
-            user_id: userId,
-            preferences_id: preferenceId, // Use the composite key
-          },
-        },
-        create: {
-          user_id: userId,
-          preferences_id: preferenceId,
-        },
-        update: {
-          preferences_id: preferenceId, // Update the preferences_id
-        },
-      });
+    const userPreference = await prisma.userPreferences.findUnique({
+      where: {
+        user_preferences_id: userPreferenceId,
+      },
     });
 
-    // Wait for all updates to finish
-    const updatedPreferences = await Promise.all(updatePromises);
+    if (!userPreference) {
+      return res.status(404).json({
+        success: false,
+        message: "User preference not found",
+      });
+    }
+
+    if (userPreference.user_id !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "User preference does not belong to this user",
+      });
+    }
+
+    const updatedUserPreference = await prisma.preferences.update({
+      where: {
+        preferences_id: userPreference.preferences_id,
+      },
+      data: {
+        preference_name: preference_name,
+        description: description,
+      },
+    });
 
     res.status(200).json({
       success: true,
       message: "User preferences updated successfully",
-      data: updatedPreferences,
+      data: updatedUserPreference,
     });
   } catch (error) {
-    console.error("Error while updating preferences:", error);
+    console.error("Error while updating user preferences:", error);
     res.status(500).json({
       success: false,
       message: "An error occurred while updating user preferences",
@@ -196,7 +204,6 @@ const updateUserPreferences = async (req, res) => {
     });
   }
 };
-
 const getUserNotifications = async (req, res) => {
   try {
     const { userId } = req.params;

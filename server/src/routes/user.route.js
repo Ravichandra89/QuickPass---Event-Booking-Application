@@ -14,7 +14,7 @@ const userRoute = express.Router();
 userRoute.get("/profile/:userId", getUserProfile);
 userRoute.patch("/profile/:userId", updateUserProfile);
 userRoute.get("/preferences/:userId", getUserPreferences);
-userRoute.patch("/preferences/:userId", updateUserPreferences);
+userRoute.patch("/preferences/:userId/:userPreferenceId", updateUserPreferences);
 userRoute.get("/notification/:userId", getUserNotifications);
 
 export default userRoute;
