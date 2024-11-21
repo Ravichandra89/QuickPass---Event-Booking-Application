@@ -3,47 +3,40 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// User model Schema
 model User {
   user_id              String               @id @default(uuid())
   first_name           String
   last_name            String
   email                String               @unique
-  account_Status       AccountStatus
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
-  location_id          String?
-  // Relation with location  Table
-  location             Location?            @relation(fields: [location_id], references: [location_id])
-  paymentInfo          PaymentInfo[]
-  user_preferences     UserPreferences[]
-  payment_transactions PaymentTransaction[]
-  event_bookings       EventBooking[]
+  account_status       AccountStatus
+  password             String
   booking_histories    BookingHistory[]
-}
-
-// Payment Info model Schema
-
-model PaymentInfo {
-  payment_info_id      String               @id @default(uuid())
-  user_id              String
-  card_token           String
-  expiry_date          DateTime
-  billing_address      String
-  payment_type         PaymentType
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  event_bookings       EventBooking[]
+  payment_info         PaymentInfo[]
   payment_transactions PaymentTransaction[]
-
-  // Relation for user_id
-  user User @relation(fields: [user_id], references: [user_id])
+  user_preferences     UserPreferences[]
 }
 
-// Location Model Schema
+model EventOrganizer {
+  organizer_id    String      @id @default(uuid())
+  organizer_name  String
+  organizer_email String      @unique
+  contact_number  String
+  gst_number      String      @unique
+  legal_status    LegalStatus
+  approval_date   DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  password        String
+  events          Event[]
+}
 
 model Location {
   location_id String   @id @default(uuid())
@@ -57,91 +50,55 @@ model Location {
   longitude   Float
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  users       User[]
   events      Event[]
 }
 
-// Preferences model Schema
-model Preferences {
-  preferences_id   String            @id @default(uuid())
-  preference_name  String
-  description      String
-  user_preferences UserPreferences[]
-}
-
-// UserPreferences Model Schema
-model UserPreferences {
-  user_preferences_id String @id @default(uuid())
-  user_id             String
-  preferences_id      String
-
-  // Raltion for User and Preference
-  user       User        @relation(fields: [user_id], references: [user_id])
-  preference Preferences @relation(fields: [preferences_id], references: [preferences_id])
-}
-
-// Event Model Schema
-
 model Event {
-  event_id     String      @id @default(uuid())
-  organizer_id String
-  event_name   String
-  description  String
-  event_type   EventType
-  start_date   DateTime
-  end_date     DateTime
-  location_id  String
-  status       EventStatus
-  ticketlimit  Int
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-
-  // Seats Inventory 
-  seats          SeatsInventory[]
-  event_bookings EventBooking[]
-
-  // Relations for locationId and organizerId
-  location       Location         @relation(fields: [location_id], references: [location_id])
-  organizer      EventOrganizer   @relation(fields: [organizer_id], references: [organizer_id])
-  BookingHistory BookingHistory[]
+  event_id          String           @id @default(uuid())
+  organizer_id      String
+  event_name        String
+  description       String
+  event_type        EventType
+  start_date        DateTime
+  end_date          DateTime
+  location_id       String
+  status            EventStatus
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  ticket_limit      Int?
+  booking_histories BookingHistory[]
+  location          Location         @relation(fields: [location_id], references: [location_id])
+  organizer         EventOrganizer   @relation(fields: [organizer_id], references: [organizer_id])
+  event_bookings    EventBooking[]
+  seats_inventory   SeatsInventory[]
 }
 
-// Event Booking model Schema
+model SeatsInventory {
+  seat_id        String         @id @default(uuid())
+  event_id       String
+  seat_number    String
+  seat_type      SeatType
+  price          Float
+  seat_status    SeatStatus
+  event_bookings EventBooking[]
+  event          Event          @relation(fields: [event_id], references: [event_id])
+}
 
 model EventBooking {
-  event_booking_id  String        @id @default(uuid())
-  event_id          String
-  user_id           String
-  seat_id           String
-  booking_date      DateTime
-  paymentStatus     PaymentStatus
-  amount_paid       Float
-  cancellation_date DateTime?
-  createdAt         DateTime      @default(now())
-
-  // Raltions here 
-  event Event          @relation(fields: [event_id], references: [event_id])
-  user  User           @relation(fields: [user_id], references: [user_id])
-  seat  SeatsInventory @relation(fields: [seat_id], references: [seat_id])
-
+  event_booking_id    String               @id @default(uuid())
+  event_id            String
+  user_id             String
+  seat_id             String
+  booking_date        DateTime
+  amount_paid         Float
+  cancellation_date   DateTime?
+  createdAt           DateTime             @default(now())
+  payment_status      PaymentStatus
+  event               Event                @relation(fields: [event_id], references: [event_id])
+  seat                SeatsInventory       @relation(fields: [seat_id], references: [seat_id])
+  user                User                 @relation(fields: [user_id], references: [user_id])
   payment_transaction PaymentTransaction[]
 }
-
-//  SeatsInventory Model Schema
-model SeatsInventory {
-  seat_id     String     @id @default(uuid())
-  event_id    String
-  seat_number String
-  seat_type   SeatType
-  price       Float
-  seat_status SeatStatus
-
-  // Relation with event
-  event          Event          @relation(fields: [event_id], references: [event_id])
-  event_bookings EventBooking[]
-}
-
-// bookingHistory model schema
 
 model BookingHistory {
   history_id      String        @id @default(uuid())
@@ -153,27 +110,23 @@ model BookingHistory {
   ticket_quantity Int
   amount_paid     Float
   createdAt       DateTime      @default(now())
-
-  // Relations for Event and User
-  event Event @relation(fields: [event_id], references: [event_id])
-  user  User  @relation(fields: [user_id], references: [user_id])
+  event           Event         @relation(fields: [event_id], references: [event_id])
+  user            User          @relation(fields: [user_id], references: [user_id])
 }
 
-// Event Organizer model Schema
-model EventOrganizer {
-  organizer_id    String      @id @default(uuid())
-  organizer_name  String
-  organizer_email String      @unique
-  contact_number  String
-  gst_number      String      @unique
-  legal_status    LegalStatus
-  approval_date   DateTime?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  events          Event[]
+model PaymentInfo {
+  payment_info_id      String               @id @default(uuid())
+  user_id              String
+  card_token           String
+  expiry_date          DateTime
+  billing_address      String
+  payment_type         PaymentType
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  user                 User                 @relation(fields: [user_id], references: [user_id])
+  payment_transactions PaymentTransaction[]
 }
 
-// PaymentTransaction model schema
 model PaymentTransaction {
   transaction_id   String            @id @default(uuid())
   user_id          String
@@ -182,14 +135,26 @@ model PaymentTransaction {
   amount           Float
   status           TransactionStatus
   transaction_date DateTime
-
-  // Relations 
-  user          User         @relation(fields: [user_id], references: [user_id])
-  event_booking EventBooking @relation(fields: [event_booking_id], references: [event_booking_id])
-  payment_info  PaymentInfo  @relation(fields: [payment_info_id], references: [payment_info_id])
+  event_booking    EventBooking      @relation(fields: [event_booking_id], references: [event_booking_id])
+  payment_info     PaymentInfo       @relation(fields: [payment_info_id], references: [payment_info_id])
+  user             User              @relation(fields: [user_id], references: [user_id])
 }
 
-// All the Required Fields
+model Preferences {
+  preferences_id   String            @id @default(uuid())
+  preference_name  String
+  description      String
+  user_preferences UserPreferences[]
+}
+
+model UserPreferences {
+  user_preferences_id String      @id @default(uuid())
+  user_id             String
+  preferences_id      String
+  preference          Preferences @relation(fields: [preferences_id], references: [preferences_id])
+  user                User        @relation(fields: [user_id], references: [user_id])
+}
+
 enum AccountStatus {
   active
   inactive
@@ -240,7 +205,7 @@ enum TicketType {
   VIP
   General
   Student
-  EalyBird
+  EarlyBird
 }
 
 enum LegalStatus {
