@@ -1,12 +1,10 @@
-import prisma from "../config/prismaClient";
+import prisma from "../config/prisma.js";
 
 // GetUser Profile
 const getUserProfile = async (req, res) => {
   try {
-    // Get userId from params
-    const { userId } = await req.params;
+    const { userId } = req.params;
 
-    // Fetch the Profile
     const userProfile = await prisma.user.findUnique({
       where: {
         user_id: userId,
@@ -20,7 +18,6 @@ const getUserProfile = async (req, res) => {
       });
     }
 
-    // Send Profile in response
     res.status(200).json({
       success: true,
       message: "User profile fetched successfully",
@@ -102,7 +99,7 @@ const updateUserProfile = async (req, res) => {
 // User Preference GET Request
 const getUserPreferences = async (req, res) => {
   try {
-    const { userId } = await req.params;
+    const { userId } = req.params; 
     const userPreferences = await prisma.userPreferences.findUnique({
       where: {
         user_id: userId,
@@ -112,18 +109,17 @@ const getUserPreferences = async (req, res) => {
       },
     });
 
-    if (!userPreferences && userPreferences.length === 0) {
+    if (!userPreferences) {
       return res.status(404).json({
         success: false,
         message: "User preferences not found",
       });
     }
 
-    // send the preferences in response
     res.status(200).json({
       success: true,
       message: "User preferences retrieved successfully",
-      data: userPreferenes,
+      data: userPreferences, 
     });
   } catch (error) {
     console.error("Error while Fetching UserPreferences", error);
@@ -137,7 +133,7 @@ const getUserPreferences = async (req, res) => {
 
 const updateUserPreferences = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params; // No await here
     const { preferences } = req.body;
 
     const user = await prisma.user.findUnique({
@@ -153,7 +149,6 @@ const updateUserPreferences = async (req, res) => {
       });
     }
 
-    // Prepare the data or update
     const updateData = preferences.map((preferenceId) => ({
       where: {
         user_id_preferences_id: {
@@ -166,7 +161,6 @@ const updateUserPreferences = async (req, res) => {
       },
     }));
 
-    // Update the preferences to model
     const updatedUserPreferences = await prisma.userPreferences.updateMany({
       where: {
         user_id: userId,
@@ -174,7 +168,8 @@ const updateUserPreferences = async (req, res) => {
       data: updateData,
     });
 
-    if (!updateUserPreferences && updateUserPreferences.length === 0) {
+    if (updatedUserPreferences.count === 0) {
+      // Changed to count
       return res.status(404).json({
         success: false,
         message: "User preferences not found",
@@ -184,7 +179,7 @@ const updateUserPreferences = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "User preferences updated successfully",
-      data: updateUserPreferences,
+      data: updatedUserPreferences,
     });
   } catch (error) {
     console.error("Error while Updating UserPreferences", error);
@@ -199,7 +194,6 @@ const updateUserPreferences = async (req, res) => {
 const getUserNotifications = async (req, res) => {
   try {
     const { userId } = req.params;
-
     const user = await prisma.user.findUnique({
       where: {
         user_id: userId,
@@ -213,7 +207,6 @@ const getUserNotifications = async (req, res) => {
       });
     }
 
-    // Fetch notification for user
     const notificationFetch = await prisma.notifications.findMany({
       where: {
         user_id: userId,
@@ -223,7 +216,7 @@ const getUserNotifications = async (req, res) => {
       },
     });
 
-    if (!notificationFetch && notificationFetch.length === 0) {
+    if (!notificationFetch || notificationFetch.length === 0) {
       return res.status(404).json({
         success: false,
         message: "No notifications found for user",
@@ -245,7 +238,7 @@ const getUserNotifications = async (req, res) => {
   }
 };
 
-export default {
+export  {
   getUserProfile,
   updateUserProfile,
   getUserPreferences,
