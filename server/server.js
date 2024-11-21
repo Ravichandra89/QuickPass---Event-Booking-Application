@@ -1,38 +1,33 @@
-import app from "./src/app.js";
-import dotenv from "dotenv";
-import prisma from "./src/config/prisma.js";
+import app from './src/app.js';
+import dotenv from 'dotenv';
+import prisma from './src/config/prisma.js';
 
-dotenv.config({
-  path: "./.env",
-});
+dotenv.config({ path: './.env' });
 
 const port = process.env.PORT || 8000;
 
 const startServer = async () => {
   try {
-    await prisma.$connect();
-    console.log("Connected to the database");
+    const check = await prisma.$connect();
+    console.log(check);
+    console.log('Database connection established');
 
     app.listen(port, () => {
-      console.log(`Server is running at port : ${port}`);
+      console.log(`Server running on port: ${port}`);
     });
   } catch (error) {
-    console.log("Failed to start the server:", error);
+    console.error('Server startup failed:', error);
     process.exit(1);
   }
 };
 
-startServer();
-
-process.on("SIGINT", async () => {
-  console.log("Shutting down gracefully...");
-  await prisma.$disconnect(); // Close Prisma connection
-  console.log("Disconnected from the database");
-  process.exit(0);
-});
-
-process.on("SIGTERM", async () => {
-  console.log("Received SIGTERM, shutting down gracefully...");
+const gracefulShutdown = async (signal) => {
+  console.log(`${signal} received, shutting down gracefully`);
   await prisma.$disconnect();
   process.exit(0);
-});
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
+startServer();
