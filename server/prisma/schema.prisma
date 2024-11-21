@@ -1,6 +1,5 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "darwin-arm64"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -10,29 +9,15 @@ datasource db {
 }
 
 model User {
-  user_id           String           @id @default(uuid())
-  first_name        String
-  last_name         String
-  email             String           @unique
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  account_status    AccountStatus
-  password          String
-  booking_histories BookingHistory[]
-  Notification      Notification[]
-}
-
-// Payment Info model Schema
-
-model PaymentInfo {
-  payment_info_id      String               @id @default(uuid())
-  user_id              String
-  card_token           String
-  expiry_date          DateTime
-  billing_address      String
-  payment_type         PaymentType
+  user_id              String               @id @default(uuid())
+  first_name           String
+  last_name            String
+  email                String               @unique
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
+  account_status       AccountStatus
+  password             String
+  booking_histories    BookingHistory[]
   event_bookings       EventBooking[]
   payment_info         PaymentInfo[]
   payment_transactions PaymentTransaction[]
@@ -80,7 +65,7 @@ model Event {
   status            EventStatus
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
-  ticket_limit      Int?
+  ticket_limit      Int
   booking_histories BookingHistory[]
   location          Location         @relation(fields: [location_id], references: [location_id])
   organizer         EventOrganizer   @relation(fields: [organizer_id], references: [organizer_id])
@@ -150,34 +135,9 @@ model PaymentTransaction {
   amount           Float
   status           TransactionStatus
   transaction_date DateTime
-
-  // Relations 
-  user          User         @relation(fields: [user_id], references: [user_id])
-  event_booking EventBooking @relation(fields: [event_booking_id], references: [event_booking_id])
-  payment_info  PaymentInfo  @relation(fields: [payment_info_id], references: [payment_info_id])
-}
-
-model Notification {
-  notification_id String             @id @default(uuid())
-  user_id         String
-  message         String
-  status          NotificationStatus
-  createdAt       DateTime           @default(now())
-
-  // forming relation
-  user User @relation(fields: [user_id], references: [user_id])
-}
-
-enum NotificationStatus {
-  pending
-  sent
-  delivered
-}
-
-// All the Required Fields
-event_booking    EventBooking      @relation(fields: [event_booking_id], references: [event_booking_id])
-payment_info     PaymentInfo       @relation(fields: [payment_info_id], references: [payment_info_id])
-user             User              @relation(fields: [user_id], references: [user_id])
+  event_booking    EventBooking      @relation(fields: [event_booking_id], references: [event_booking_id])
+  payment_info     PaymentInfo       @relation(fields: [payment_info_id], references: [payment_info_id])
+  user             User              @relation(fields: [user_id], references: [user_id])
 }
 
 model Preferences {
