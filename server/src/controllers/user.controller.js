@@ -4,7 +4,9 @@ import prisma from "../config/prisma.js";
 const getUserProfile = async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log(`Fetching profile for userId: ${userId}`);
 
+    // Fetch user profile from the database
     const userProfile = await prisma.user.findUnique({
       where: {
         user_id: userId,
@@ -18,6 +20,10 @@ const getUserProfile = async (req, res) => {
       });
     }
 
+    // Log the user profile data
+    console.log("User Profile Data:", userProfile);
+
+    // Respond with the user profile data
     res.status(200).json({
       success: true,
       message: "User profile fetched successfully",
@@ -38,7 +44,7 @@ const updateUserProfile = async (req, res) => {
   try {
     // Get userId from params
     const { userId } = await req.params;
-    const { firstName, lastName, email, paymentInfo } = await req.body;
+    const { first_name, last_name, email, paymentInfo } = await req.body;
 
     // Fetch the user for updating their profile
     const user = await prisma.user.findUnique({
@@ -57,8 +63,8 @@ const updateUserProfile = async (req, res) => {
     // Update the profile by required fields
     const updateData = {};
 
-    if (firstName) updateData.firstName = firstName;
-    if (lastName) updateData.lastName = lastName;
+    if (first_name) updateData.first_name = first_name;
+    if (last_name) updateData.last_name = last_name;
     if (email) updateData.email = email;
 
     if (paymentInfo) {
@@ -99,30 +105,34 @@ const updateUserProfile = async (req, res) => {
 // User Preference GET Request
 const getUserPreferences = async (req, res) => {
   try {
-    const { userId } = req.params; 
-    const userPreferences = await prisma.userPreferences.findUnique({
+    const { userId } = req.params;
+    console.log(`Fetching preferences for userId: ${userId}`);
+
+    // Fetch the user preferences using user_id with findMany
+    const userPreferences = await prisma.userPreferences.findMany({
       where: {
-        user_id: userId,
+        user_id: userId, // Find preferences by user_id
       },
       include: {
-        preferences: true,
+        preference: true, // Include the preference data
       },
     });
 
-    if (!userPreferences) {
+    if (userPreferences.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User preferences not found",
       });
     }
 
+    // Respond with the user preferences data
     res.status(200).json({
       success: true,
-      message: "User preferences retrieved successfully",
-      data: userPreferences, 
+      message: "User preferences fetched successfully",
+      data: userPreferences,
     });
   } catch (error) {
-    console.error("Error while Fetching UserPreferences", error);
+    console.error("Error while Fetching User Preferences", error);
     res.status(500).json({
       success: false,
       message: "An error occurred while fetching user preferences",
@@ -133,9 +143,10 @@ const getUserPreferences = async (req, res) => {
 
 const updateUserPreferences = async (req, res) => {
   try {
-    const { userId } = req.params; // No await here
-    const { preferences } = req.body;
+    const { userId } = req.params;
+    const { preferences } = req.body; // Array of preference IDs to be updated
 
+    // Fetch the user by userId
     const user = await prisma.user.findUnique({
       where: {
         user_id: userId,
@@ -149,40 +160,35 @@ const updateUserPreferences = async (req, res) => {
       });
     }
 
-    const updateData = preferences.map((preferenceId) => ({
-      where: {
-        user_id_preferences_id: {
+    // Loop through the preferences array and update each user preference
+    const updatePromises = preferences.map((preferenceId) => {
+      return prisma.userPreferences.upsert({
+        where: {
+          user_id_preferences_id: {
+            user_id: userId,
+            preferences_id: preferenceId, // Use the composite key
+          },
+        },
+        create: {
           user_id: userId,
           preferences_id: preferenceId,
         },
-      },
-      data: {
-        preferences_id: preferenceId,
-      },
-    }));
-
-    const updatedUserPreferences = await prisma.userPreferences.updateMany({
-      where: {
-        user_id: userId,
-      },
-      data: updateData,
+        update: {
+          preferences_id: preferenceId, // Update the preferences_id
+        },
+      });
     });
 
-    if (updatedUserPreferences.count === 0) {
-      // Changed to count
-      return res.status(404).json({
-        success: false,
-        message: "User preferences not found",
-      });
-    }
+    // Wait for all updates to finish
+    const updatedPreferences = await Promise.all(updatePromises);
 
     res.status(200).json({
       success: true,
       message: "User preferences updated successfully",
-      data: updatedUserPreferences,
+      data: updatedPreferences,
     });
   } catch (error) {
-    console.error("Error while Updating UserPreferences", error);
+    console.error("Error while updating preferences:", error);
     res.status(500).json({
       success: false,
       message: "An error occurred while updating user preferences",
@@ -238,7 +244,7 @@ const getUserNotifications = async (req, res) => {
   }
 };
 
-export  {
+export {
   getUserProfile,
   updateUserProfile,
   getUserPreferences,

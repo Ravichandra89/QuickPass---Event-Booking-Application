@@ -11,8 +11,8 @@ import authenticate from "../middlewares/authenticate.js";
 const userRoute = express.Router();
 
 // Route with Controllers
-userRoute.get("/profile/:userId", authenticate, getUserProfile);
-userRoute.patch("/profile/:userId", authenticate, updateUserProfile);
+userRoute.get("/profile/:userId", getUserProfile);
+userRoute.patch("/profile/:userId", updateUserProfile);
 userRoute.get("/preferences/:userId", getUserPreferences);
 userRoute.patch("/preferences/:userId", updateUserPreferences);
 userRoute.get("/notification/:userId", getUserNotifications);
