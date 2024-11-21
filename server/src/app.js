@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import userRoute from "./routes/user.route.js";
 
 const app = express();
 
@@ -15,6 +16,9 @@ import eventRoute from "../src/routes/event.route.js";
 
 // routes declearation
 app.use("/api/v1/event", eventRoute);
+
+// Route declaration for User
+app.use("/api/v1/user", userRoute);
 
 app.all("*", (_req, res) => {
   res.status(404).send("hello");

@@ -5,15 +5,16 @@ import {
   getUserPreferences,
   updateUserPreferences,
   getUserNotifications,
-} from "../controllers/user.controller";
+} from "../controllers/user.controller.js";
+import authenticate from "../middlewares/authenticate.js";
 
-const userRouter = express.Router();
+const userRoute = express.Router();
 
 // Route with Controllers
-userRouter.get("/profile/:userId", authMiddleware, getUserProfile);
-userRouter.patch("/profile/:userId", authMiddleware, updateUserProfile);
-userRouter.get("/preferences/:userId", getUserPreferences);
-userRouter.patch("/preferences/:userId", updateUserPreferences);
-userRouter.get("/notification/:userId", getUserNotifications);
+userRoute.get("/profile/:userId", authenticate, getUserProfile);
+userRoute.patch("/profile/:userId", authenticate, updateUserProfile);
+userRoute.get("/preferences/:userId", getUserPreferences);
+userRoute.patch("/preferences/:userId", updateUserPreferences);
+userRoute.get("/notification/:userId", getUserNotifications);
 
-export default userRouter;
+export default userRoute;
