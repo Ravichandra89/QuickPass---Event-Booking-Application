@@ -1,23 +1,27 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import userRoute from "./routes/user.route.js";
 
 const app = express();
 
-// configuration
-app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For handling URL-encoded data
+
+// Static files and cookies
 app.use(express.static("public"));
 app.use(cookieParser());
 
-//routes import
+// Routes
 import eventRoute from "../src/routes/event.route.js";
 
-// routes declearation
+// Define the routes
 app.use("/api/v1/event", eventRoute);
+app.use("/api/v1/user", userRoute);
 
+// Catch-all for undefined routes
 app.all("*", (_req, res) => {
-  res.status(404).send("hello");
+  res.status(404).send("Route not found");
 });
 
 export default app;
