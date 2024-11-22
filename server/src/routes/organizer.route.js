@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { createEvent, editEvent } from '../controllers/organizer.controller.js';
+import { changeSeatInventory, createEvent, editEvent } from '../controllers/organizer.controller.js';
 
 const router = Router();
 
-router.post('/event', createEvent);
-router.put('/event', editEvent);
+router.post('/events', createEvent);
+router.put('/events/:eventId', editEvent);
+router.put('/events/inventory/:eventId', changeSeatInventory);
 
 export default router;
