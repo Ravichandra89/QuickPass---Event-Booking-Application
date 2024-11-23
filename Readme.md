@@ -92,3 +92,4 @@ Deploy the EventPass application on cloud platforms like AWS, Heroku, or Digital
 3. **Build Application**:
    ```bash
    npm run build
+   ```
